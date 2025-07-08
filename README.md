@@ -20,4 +20,25 @@
       - DNS
       - Cluster (a collection of worker nodes, and control plane. cluster is basically k8s cluster)
       - NAT
+  - RUN `terraform init` inside the foundation folder
+  - The `.terraform.lock.hcl` file is Terraform's dependency lock file. It:
 
+      - Locks provider versions - Records the exact versions of providers that were downloaded
+      - Ensures consistency - Makes sure everyone on your team uses the same provider versions
+      - Prevents drift - Stops providers from auto-updating to newer versions unexpectedly
+      - Contains checksums - Verifies provider authenticity and integrity
+
+      **Should you commit it?** Yes, always commit it to version control.
+      **When is it created?** During terraform init when providers are downloaded.
+      Example content:
+      ```hcl
+
+        provider "registry.terraform.io/hashicorp/aws" {
+          version = "5.0.0"
+          hashes = [
+            "h1:xyz123...",
+            "zh:abc456...",
+          ]
+        }
+      ```
+      It's similar to `package-lock.json` in Node.js or `Pipfile.lock` in Python - it locks your dependencies to specific versions for reproducible builds.

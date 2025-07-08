@@ -8,7 +8,7 @@ locals {
 variable "domain" {
   description = "AWS Route53 hosted zone domain name"
   type        = string
-  default = "stakpak.dev"
+  default = "terraform-k8s-mumajid"
 }
 
 data "aws_route53_zone" "default" {

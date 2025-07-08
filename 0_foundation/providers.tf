@@ -9,7 +9,9 @@ terraform {
       version = "2.24.0"
     }
   }
-  backend "s3" { # used for terraform state management
+  # used for terraform state management
+  # Needs to be created manually, before running terraform init
+  backend "s3" { 
     bucket = "terraform-k8s-platform-app"
     key    = "aws/00_foundations"
     region = "eu-central-1"
