@@ -9,15 +9,15 @@ terraform {
       version = "2.24.0"
     }
   }
-  backend "s3" {
+  backend "s3" { # used for terraform state management
     bucket = "terraform-k8s-platform-app"
     key    = "aws/00_foundations"
-    region = "eu-north-1"
+    region = "eu-central-1"
   }
 }
 
 provider "aws" {
-  region = "eu-north-1"
+  region = "eu-central-1"
 }
 
 provider "kubernetes" {
