@@ -94,3 +94,41 @@
           ├── MX Record: mail.terraform-aws-platform.xyz → mail-server.com
           ├── NS Records: (nameservers that handle this zone)
           └── SOA Record: (zone authority information)
+
+### APP Deployment:
+
+In the `100_app` directory we have `main.tf` file which is responsible for deploying Google's Microservices Demo App
+1. Creates Namespace
+``` "kubernetes_namespace_v1" "onlineboutique" ```
+
+ - Creates onlineboutique namespace for the application
+
+2. ArgoCD Application
+``` "kubernetes_manifest" "app_chart" ```
+
+ - Deploys Google's Online Boutique microservices demo via ArgoCD
+ - Uses Helm chart from Google's container registry
+ - Auto-sync enabled: ArgoCD automatically applies changes and heals drift
+ - Frontend config: Sets externalService: false (uses ingress instead of LoadBalancer)
+
+3. Ingress with TLS
+``` "kubernetes_ingress_v1" "frontend" ```
+
+ - Exposes the frontend service at app.terraform-aws-platform.xyz
+ - Auto SSL: cert-manager automatically gets Let's Encrypt certificate
+ - Routes: All traffic to the frontend service on port 80
+
+4. External Secret
+``` "kubernetes_manifest" "cluster_secret_store" ```
+
+ - Syncs secret from AWS Parameter Store (cluster-prod-k8s-platform-tutorial-secret)
+ - Creates Kubernetes secret named onlineboutique-custom-secret
+ - Auto-refresh: Updates every hour
+
+End Result
+  - Complete e-commerce demo: A fully functional microservices application with:
+
+  - Public access: https://app.terraform-aws-platform.xyz (SSL-enabled)
+  - GitOps: Managed by ArgoCD
+  - Secret management: AWS Parameter Store integration
+  - Production-ready: Ingress, TLS, namespace isolation
