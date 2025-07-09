@@ -181,6 +181,25 @@ Hosted Zone: terraform-aws-platform.xyz
 └── SOA Record: (zone authority information)
 ```
 
+## Layer 3: Observability and Monitoring
+
+This part installs and configures many tools to help us monitor and check our cluster overall health.
+
+### Overview
+Automatic Data Collection (No Code Changes):
+
+Prometheus: Infrastructure metrics (CPU, memory, network)
+Loki + Promtail: All application logs automatically
+Pixie: HTTP traffic, database queries, service maps (eBPF magic!)
+
+Requires Instrumentation:
+
+Tempo + OpenTelemetry: Distributed tracing (needs SDK integration)
+
+### Details:
+
+Please head to the RAEDME file inside the `04_observability` folder for a more in depth insights about the tools and the over all architecture.
+
 ## Application Deployment
 
 In the `100_app` directory we have `main.tf` file which is responsible for deploying Google's Microservices Demo App.
