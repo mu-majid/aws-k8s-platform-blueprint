@@ -70,3 +70,27 @@
   -  ArgoCD is a GitOps tool that monitors git, and once it sees a change (in code or config, depends how it was set up), it will deploy and update the cluster.
   - RUN `terraform init` to configure the providers.
   - RUN `terraform apply` to create the resources.
+  - in Step03 we will configure:
+    1. DNS -> create a DNS record in the hostedZone on AWSRoute53, and make it point to our cluster's ingress
+      This means we have a domain, and we want to map this domain to our ingress's ip
+      RUN `kubectl -n ingress-nginx get svc` -> you can see the ingress IP
+    2. configure `cert-manager` to create TLS certificates (Let's encrypt is used for issuing the cert)
+      Automatic SSL: When you create an Ingress with TLS, cert-manager will automatically:
+      a. Request a certificate from Let's Encrypt
+      b. Serve the challenge file via nginx
+      c. Get the certificate and store it in Kubernetes
+      d. Auto-renew before expiration
+    3. Configure the secrets manager -> external-secrets operator can fetch certificates/secrest from aws parameter store
+      A serviceAccount named secret-store (assuming the role created in foundation) will be created, and a ParameterStore as a secrets store.
+      Automatic Secret Sync: You can now create ExternalSecret resources that:
+      a. Reference secrets stored in AWS Parameter Store
+      b. Automatically sync them to Kubernetes secrets
+      c. Keep them updated when Parameter Store values change
+
+  - Hosted zones are AWS's way of organizing and managing all DNS records for a domain in one place.
+      Hosted Zone: terraform-aws-platform.xyz
+          ├── A Record: terraform-aws-platform.xyz → 192.168.1.100
+          ├── CNAME Record: app.terraform-aws-platform.xyz → load-balancer.aws.com
+          ├── MX Record: mail.terraform-aws-platform.xyz → mail-server.com
+          ├── NS Records: (nameservers that handle this zone)
+          └── SOA Record: (zone authority information)

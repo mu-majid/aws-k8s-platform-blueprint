@@ -8,12 +8,12 @@ locals {
 variable "domain" {
   description = "AWS Route53 hosted zone domain name"
   type        = string
-  default = "terraform-k8s-mumajid"
+  default = "terraform-aws-platform.xyz"
 }
 
-# data "aws_route53_zone" "default" {
-#   name = var.domain
-# }
+data "aws_route53_zone" "default" {
+  name = var.domain
+}
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -75,7 +75,7 @@ module "cert_manager_irsa_role" {
 
   role_name                     = "cert-manager"
   attach_cert_manager_policy    = true
-  # cert_manager_hosted_zone_arns = [data.aws_route53_zone.default.arn]
+  cert_manager_hosted_zone_arns = [data.aws_route53_zone.default.arn]
 
   oidc_providers = {
     ex = {
