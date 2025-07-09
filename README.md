@@ -42,3 +42,6 @@
         }
       ```
       It's similar to `package-lock.json` in Node.js or `Pipfile.lock` in Python - it locks your dependencies to specific versions for reproducible builds.
+
+  - After running `terraform apply`, all resources should be created on AWS.
+  - now we run `aws eks update-kubeconfig --region [YOUR_REGION] --name [CLUSTER_NAME]` to download the certificate that allows us to communicate with the API via kubectl. Then we can run kubectl get nodes to check the nodes (internal k8s nodes.)
