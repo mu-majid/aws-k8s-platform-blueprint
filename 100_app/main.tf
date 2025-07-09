@@ -105,7 +105,7 @@ spec:
   data:
     - secretKey: THE_ANSWER
       remoteRef:
-        key: cluster-prod-k8s-platform-tutorial-secret
+        key: cluster-prod-k8s-platform-example-secret
   YAML
   )
 
