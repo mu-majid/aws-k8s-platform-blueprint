@@ -30,6 +30,7 @@ data "aws_eks_cluster" "cluster" {
 data "aws_eks_cluster_auth" "cluster" {
   name = "cluster-prod"
 }
+# this reference the cluster created in foundation - and it gets the values form the terraform state
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   token                  = data.aws_eks_cluster_auth.cluster.token
