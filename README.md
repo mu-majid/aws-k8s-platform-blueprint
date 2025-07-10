@@ -224,6 +224,7 @@ graph TD
     class B1,G,J storage
     class B,F,I,L collector
     class C,D,M ui
+```
 
 ### Overview
  cluster probably needs the EBS CSI driver for dynamic volume provisioning
