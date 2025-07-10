@@ -40,6 +40,16 @@ resource "aws_route53_record" "ingress_record" {
   ]
 }
 
+resource "aws_route53_record" "grafana_record" {
+  zone_id = data.aws_route53_zone.default.zone_id
+  name    = "grafana.${var.domain}"
+  type    = "CNAME"
+  ttl     = "300"
+  records = [
+    data.kubernetes_service_v1.ingress_service.status.0.load_balancer.0.ingress.0.hostname
+  ]
+}
+
 # SECTION 2
 
 # Deploys a cert-manager ClusterIssuer into your Kubernetes cluster
