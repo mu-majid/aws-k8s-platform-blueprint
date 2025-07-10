@@ -177,6 +177,9 @@ In Step03 we will configure:
 
 #### 1. DNS Configuration
 Create a DNS record in the hosted zone on AWS Route53, and make it point to our cluster's ingress.
+- Creates `app.terraform-aws-platform.xyz` → Points to your application
+- Creates `grafana.terraform-aws-platform.xyz` → Points to your monitoring dashboard
+- Both records point to the same AWS Load Balancer (ingress controller)
 
 This means we have a domain, and we want to map this domain to our ingress's IP.
 
@@ -195,7 +198,16 @@ Configure `cert-manager` to create TLS certificates (Let's Encrypt is used for i
 3. Get the certificate and store it in Kubernetes
 4. Auto-renew before expiration
 
-#### 3. Secret Management Configuration
+#### 3. IAM Roles for ServiceAccounts Configuration:
+Service Accounts Created:
+| Service Account| Namespace | Purpose | AWS Role |
+|----------|----------|----------|----------|
+| secret-store    | external-secrets     | Access AWS Parameter Store     | secret-store     |
+| cluster-autoscaler    | kube-system     | Scale EC2 Instances     | cluster-autoscaler     |
+| ebs-csi-controller-sa    | kubesystem     | Manage EBS volumes     | ebs-csi-controller     |
+
+
+#### 4. Secret Management Configuration
 Configure the secrets manager → external-secrets operator can fetch certificates/secrets from AWS Parameter Store.
 
 A service account named `secret-store` (assuming the role created in foundation) will be created, and a ParameterStore as a secrets store.
