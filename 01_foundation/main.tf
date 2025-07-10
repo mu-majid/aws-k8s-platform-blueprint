@@ -56,9 +56,9 @@ module "cluster" {
       ami_type = "BOTTLEROCKET_x86_64"
       platform = "bottlerocket"
 
-      min_size     = 2
-      desired_size = 2
-      max_size     = 5
+      min_size     = 3
+      desired_size = 4
+      max_size     = 6
 
       instance_types = ["t3.xlarge"]
     }
@@ -98,7 +98,43 @@ module "external_secrets_irsa_role" {
   oidc_providers = {
     ex = {
       provider_arn               = module.cluster.oidc_provider_arn
-      namespace_service_accounts = ["external-secrets:secret-store"] # ServiceAccount assuming this role exists in external-secrets namespace, the ServiceAccount name is secret-store
+      namespace_service_accounts = ["external-secrets:secret-store"] # ServiceAccount taking this role exists in external-secrets namespace, the ServiceAccount name is secret-store
+    }
+  }
+
+  tags = local.tags
+}
+
+module "cluster_autoscaler_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.32.0"
+
+  role_name                        = "cluster-autoscaler"
+  attach_cluster_autoscaler_policy = true
+  cluster_autoscaler_cluster_ids   = [module.cluster.cluster_name]
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.cluster.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:cluster-autoscaler"] # Role cluster-autoscaler
+    }
+  }
+
+  tags = local.tags
+}
+
+# For the EBS CSI driver
+module "ebs_csi_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.32.0"
+
+  role_name             = "ebs-csi-controller"
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.cluster.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
 

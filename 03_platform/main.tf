@@ -83,6 +83,25 @@ resource "kubernetes_service_account_v1" "secret_store" { # service account -> w
     }
   }
 }
+resource "kubernetes_service_account_v1" "cluster_autoscaler" {
+  metadata {
+    namespace = "kube-system"
+    name      = "cluster-autoscaler"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/cluster-autoscaler"
+    }
+  }
+}
+
+resource "kubernetes_service_account_v1" "ebs_csi_controller" {
+  metadata {
+    namespace = "kube-system"
+    name      = "ebs-csi-controller-sa"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ebs-csi-controller"
+    }
+  }
+}
 
 # Deploys an external-secrets ClusterSecretStore into your Kubernetes cluster
 # ClusterSecretStore = cluster-wide connection to external secret management system

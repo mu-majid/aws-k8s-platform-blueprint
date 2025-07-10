@@ -185,7 +185,18 @@ Hosted Zone: terraform-aws-platform.xyz
 
 This part installs and configures many tools to help us monitor and check our cluster overall health.
 
+### Components:
+1. Visualization (Grafana)
+2. Logging (Grafana Loki)
+3. Metrics (Prometheus)
+4. Auto-instrumented Tracing (Pixie)
+5. Tracing (Grafana Tempo & Open Telemetry)
+
 ### Overview
+ cluster probably needs the EBS CSI driver for dynamic volume provisioning
+ 
+ ```kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.25"```
+ 
 Automatic Data Collection (No Code Changes):
 
 Prometheus: Infrastructure metrics (CPU, memory, network)

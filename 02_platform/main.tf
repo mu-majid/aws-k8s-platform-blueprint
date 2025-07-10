@@ -77,3 +77,46 @@ applicationSet:
     YAML
   ]
 }
+resource "helm_release" "cluster_autoscaler" {
+  name             = "cluster-autoscaler"
+  namespace        = "kube-system"
+  repository       = "https://kubernetes.github.io/autoscaler"
+  chart            = "cluster-autoscaler"
+  version          = "9.29.0"
+  timeout          = 300
+  atomic           = true
+  create_namespace = false
+
+  values = [
+    <<YAML
+autoDiscovery:
+  clusterName: cluster-prod
+awsRegion: eu-central-1
+rbac:
+  create: true
+  serviceAccount:
+    name: cluster-autoscaler
+serviceAccount:
+  create: false  # Don't create, we'll manage it in step 3
+  name: cluster-autoscaler
+resources:
+  requests:
+    cpu: 100m
+    memory: 300Mi
+  limits:
+    cpu: 100m
+    memory: 300Mi
+    YAML
+  ]
+}
+
+resource "helm_release" "ebs_csi_driver" {
+  name             = "aws-ebs-csi-driver"
+  namespace        = "kube-system"
+  repository       = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+  chart            = "aws-ebs-csi-driver"
+  version          = "2.24.0"
+  timeout          = 300
+  atomic           = true
+  create_namespace = false
+}
