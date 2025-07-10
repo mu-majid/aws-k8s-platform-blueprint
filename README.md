@@ -2,6 +2,49 @@
 
 This repository contains a complete production-ready platform for deploying applications on AWS using Kubernetes, built with Terraform and following GitOps principles.
 
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Architecture](#architecture)
+  - [Layer Structure](#layer-structure)
+- [🏗️ Layer 1: Foundation](#️-layer-1-foundation)
+  - [Components](#components)
+  - [Deployment](#deployment)
+  - [Understanding .terraform.lock.hcl](#understanding-terraformlockhcl)
+  - [Post-Deployment](#post-deployment)
+- [🔧 Layer 2: Platform](#-layer-2-platform)
+  - [Secret Management Options](#secret-management-options)
+  - [Step 02: Software Installation](#step-02-software-installation)
+  - [Step 03: Software Configuration](#step-03-software-configuration)
+    - [DNS Configuration](#1-dns-configuration)
+    - [Certificate Management](#2-certificate-management)
+    - [Secret Management Configuration](#3-secret-management-configuration)
+  - [Hosted Zones](#hosted-zones)
+- [📊 Layer 3: Observability and Monitoring](#-layer-3-observability-and-monitoring)
+  - [Components](#components-1)
+  - [Data Flow](#-observability-data-flow)
+  - [Overview](#overview-1)
+  - [Details](#details)
+- [🚀 Application Deployment](#-application-deployment)
+  - [Components](#components-2)
+    - [Creates Namespace](#1-creates-namespace)
+    - [ArgoCD Application](#2-argocd-application)
+    - [Ingress with TLS](#3-ingress-with-tls)
+    - [External Secret](#4-external-secret)
+  - [End Result](#end-result)
+  - [How It Works](#how-it-works)
+  - [Deployment](#deployment-1)
+- [🌐 Traffic Flow](#-traffic-flow)
+- [🔧 Troubleshooting](#-troubleshooting)
+  - [Common Issues](#common-issues)
+  - [Useful Commands](#useful-commands)
+- [✨ Best Practices Implemented](#-best-practices-implemented)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+---
+
 ## Overview
 
 The platform uses **Terraform** to create and manage infrastructure, making provisioning easier and more reproducible. It's built in layers to address Terraform's dependency management challenges (DAG issues) and follows best practices for state management using external storage like S3.
