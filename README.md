@@ -192,7 +192,7 @@ This part installs and configures many tools to help us monitor and check our cl
 4. Auto-instrumented Tracing (Pixie)
 5. Tracing (Grafana Tempo & Open Telemetry)
 
-### 🔄 Observability Data Flow
+### 🔄 Observability Data Flow:
 
 ```mermaid
 graph TD
