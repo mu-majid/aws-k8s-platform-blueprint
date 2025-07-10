@@ -49,6 +49,41 @@ This repository contains a complete production-ready platform for deploying appl
 
 The platform uses **Terraform** to create and manage infrastructure, making provisioning easier and more reproducible. It's built in layers to address Terraform's dependency management challenges (DAG issues) and follows best practices for state management using external storage like S3.
 
+To Reach full production readiness, these points needs to be addressed in each of the layers below:
+
+Foundations
+
+- Multi-region setup for disaster recovery
+- Backup strategy for EKS/RDS
+- KMS encryption for EBS/secrets
+- VPC Flow Logs and GuardDuty
+- Network policies and security groups hardening
+
+Platform2
+
+- Resource quotas and limits
+- Pod Security Standards
+- RBAC policies (least privilege)
+- Image scanning and admission controllers
+- HA configurations (multi-replica ArgoCD, etc.)
+
+Platform3
+
+- WAF on load balancer
+- Rate limiting on ingress
+- Secret rotation automation
+- DNS failover setup
+- Certificate monitoring
+
+Observability
+
+- External storage (S3 for Loki/Tempo instead of local)
+- HA setup (3+ replicas for critical components)
+- Alerting rules and runbooks
+- SLI/SLO monitoring
+- Log retention policies
+- Backup for monitoring data
+
 ## Prerequisites
 
 Before getting started, ensure you have:
@@ -69,6 +104,7 @@ The platform is organized into **layers**, each containing:
 ├── platform/           # Kubernetes platform components
 │   ├── step02/         # Software installation
 │   └── step03/         # Software configuration
+|   observability       # System Observability and Monitoring Stack
 └── app/                # Application deployment
 ```
 
@@ -263,22 +299,32 @@ graph TD
     C -->|queries| G
     
     %% Traces Flow
-    H[Applications] -->|sends| I[OpenTelemetry]
+    H[Applications] -->|sends| I[OpenTelemetry Collector]
     I -->|forwards| J[(Tempo)]
     C -->|queries| J
+    
+    %% OTel Self-Monitoring
+    I -->|exposes /metrics| B
     
     %% Pixie Flow
     K[Cluster] -->|eBPF| L[Pixie]
     L -->|analysis| M[Pixie UI]
     
+    %% Additional monitoring targets
+    N[Kubernetes API] -->|scrapes| B
+    O[Node Exporters] -->|scrapes| B
+    P[Other Services] -->|scrapes| B
+    
     %% Styling
     classDef storage fill:#e1f5fe
     classDef collector fill:#f3e5f5
     classDef ui fill:#e8f5e8
+    classDef selfmon fill:#fff3e0
     
     class B1,G,J storage
     class B,F,I,L collector
     class C,D,M ui
+    class I selfmon
 ```
 
 ### Overview

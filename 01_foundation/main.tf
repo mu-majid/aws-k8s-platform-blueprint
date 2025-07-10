@@ -39,7 +39,15 @@ module "cluster" {
   cluster_name    = local.cluster_name
   cluster_version = "1.27"
 
-  cluster_endpoint_public_access = true # important
+  cluster_endpoint_public_access = true # important during dev - maybe make it private later
+  # or as a middle ground:
+  
+  # cluster_endpoint_public_access = true
+  # cluster_endpoint_public_access_cidrs = [
+  #   "GITHUB_ACTIONS_IPS",
+  #   "YOUR_OFFICE_IP/32", 
+  #   "CI_SYSTEM_IPS"
+  # ]
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets # workers in private subnet -> no internet access

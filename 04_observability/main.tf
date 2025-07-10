@@ -458,7 +458,6 @@ resource "kubernetes_ingress_v1" "grafana" {
 #     path: /metrics
 #   YAML
 #   )
-# 
 #   depends_on = [
 #     helm_release.opentelemetry_collector,
 #     helm_release.kube_prometheus_stack
