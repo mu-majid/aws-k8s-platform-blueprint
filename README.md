@@ -192,6 +192,42 @@ This part installs and configures many tools to help us monitor and check our cl
 4. Auto-instrumented Tracing (Pixie)
 5. Tracing (Grafana Tempo & Open Telemetry)
 
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Applications  │───▶│   Prometheus    │───▶│ Internal Storage│
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                        ▲
+                                                        │ queries
+                                              ┌─────────────────┐
+                                              │     Grafana     │
+                                              └─────────────────┘
+                                                        │
+                                                        ▼
+                                              ┌─────────────────┐
+                                              │   Dashboards    │
+                                              └─────────────────┘
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Containers    │───▶│    Promtail     │───▶│      Loki       │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                        ▲
+                                                        │ queries
+                                              ┌─────────────────┐
+                                              │     Grafana     │
+                                              └─────────────────┘
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Applications  │───▶│ OpenTelemetry   │───▶│      Tempo      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                        ▲
+                                                        │ queries
+                                              ┌─────────────────┐
+                                              │     Grafana     │
+                                              └─────────────────┘
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│     Cluster     │───▶│      Pixie      │───▶│ Standalone UI   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+
 ### Overview
  cluster probably needs the EBS CSI driver for dynamic volume provisioning
  
