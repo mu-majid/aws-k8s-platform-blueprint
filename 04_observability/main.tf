@@ -1,3 +1,36 @@
+# Storage Class - should be first before observability components
+resource "kubernetes_storage_class_v1" "gp2_csi" {
+  metadata {
+    name = "gp2-csi"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy        = "Delete"
+  volume_binding_mode   = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+  
+  parameters = {
+    type   = "gp2"
+    fsType = "ext4"
+  }
+}
+
+# Remove default from old storage class
+resource "kubernetes_annotations" "gp2_remove_default" {
+  api_version = "storage.k8s.io/v1"
+  kind        = "StorageClass"
+  metadata {
+    name = "gp2"
+  }
+  annotations = {
+    "storageclass.kubernetes.io/is-default-class" = "false"
+  }
+}
+
+
 # Variables for observability configuration
 variable "domain" {
   description = "Domain name for Grafana ingress"
@@ -102,7 +135,8 @@ kubeProxy:
   ]
 
   depends_on = [
-    kubernetes_namespace_v1.observability
+    kubernetes_namespace_v1.observability,
+    kubernetes_storage_class_v1.gp2_csi
   ]
 }
 
@@ -174,7 +208,8 @@ test:
   ]
 
   depends_on = [
-    kubernetes_namespace_v1.observability
+    kubernetes_namespace_v1.observability,
+    kubernetes_storage_class_v1.gp2_csi
   ]
 }
 
@@ -259,7 +294,8 @@ serviceMonitor:
   ]
 
   depends_on = [
-    kubernetes_namespace_v1.observability
+    kubernetes_namespace_v1.observability,
+    kubernetes_storage_class_v1.gp2_csi
   ]
 }
 
@@ -276,6 +312,7 @@ resource "helm_release" "opentelemetry_collector" {
 
   values = [
     <<YAML
+mode: deployment 
 config:
   receivers:
     otlp:
@@ -290,6 +327,7 @@ config:
       send_batch_size: 1024
     memory_limiter:
       limit_mib: 256
+      check_interval: 1s 
   exporters:
     otlp/tempo:
       endpoint: "http://tempo:4317"

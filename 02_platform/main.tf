@@ -109,6 +109,18 @@ resources:
     YAML
   ]
 }
+## This part violates the install in 02 and configure in 03, but it is necesaary here,
+# otherwise a restart on ebs pods deployment is required to use the right SA
+data "aws_caller_identity" "current" {}
+resource "kubernetes_service_account_v1" "ebs_csi_controller" {
+  metadata {
+    namespace = "kube-system"
+    name      = "ebs-csi-controller-sa"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ebs-csi-controller"
+    }
+  }
+}
 
 resource "helm_release" "ebs_csi_driver" {
   name             = "aws-ebs-csi-driver"
@@ -119,4 +131,8 @@ resource "helm_release" "ebs_csi_driver" {
   timeout          = 300
   atomic           = true
   create_namespace = false
+  
+  depends_on = [
+    kubernetes_service_account_v1.ebs_csi_controller  # Ensure SA is created first
+  ]
 }
