@@ -434,6 +434,77 @@ velero backup create pre-deployment-backup \
 
 For detailed configuration and advanced features, see the [Resilience Layer README](resilience/README.md).
 
+## Layer 6: FinOps - Cost Optimization
+
+### Purpose
+Real-time Kubernetes cost monitoring and resource optimization foundation.
+
+### Components
+
+#### Deployed
+- **OpenCost** - Real-time cost monitoring and allocation
+- **Grafana Integration** - Cost dashboards in existing monitoring stack
+- **OpenCost UI** - Standalone web interface for detailed cost analysis
+
+#### Future Enhancements
+- **KEDA** - Event-driven autoscaling (SQS, CloudWatch, etc.)
+- **Karpenter** - Advanced cluster autoscaling (replace cluster-autoscaler)
+
+### What's Included
+
+```
+├── OpenCost Helm Chart
+├── Grafana Dashboard ConfigMap
+├── Ingress + DNS (opencost.domain.com)
+├── Prometheus ServiceMonitor
+└── Cost metrics collection
+```
+
+### Deployment
+
+```bash
+# Navigate to FinOps layer
+cd 06_finops
+
+# Deploy cost monitoring
+terraform init
+terraform plan
+terraform apply
+```
+
+### Access Points
+
+- **OpenCost UI**: `https://opencost.terraform-aws-platform.xyz`
+- **Grafana**: `https://grafana.terraform-aws-platform.xyz` (cost dashboard)
+- **Metrics**: Available in Prometheus
+
+### Key Features
+
+- **Cost breakdown** by namespace, deployment, service
+- **Resource efficiency** tracking (CPU/memory/storage costs)
+- **Historical cost trends** and waste identification
+- **Dual interface** - Technical (Grafana) + Business (OpenCost UI)
+
+###  Quick Tips
+
+- **Wait 2-4 weeks** for meaningful cost data before optimization
+- **Check Grafana first** for daily cost monitoring
+- **Use OpenCost UI** for detailed cost analysis and reports
+- **Monitor namespace costs** to identify optimization opportunities
+
+### Next Steps
+
+1. Establish cost baseline over 2-4 weeks
+2. Identify high-cost namespaces/workloads
+3. Consider KEDA for event-driven workloads
+4. Plan Karpenter migration for 20-50% cost reduction
+
+### Expected Impact
+
+- **Immediate**: 100% cost visibility
+- **Short-term**: 10-30% waste identification
+- **Long-term**: 20-50% cost reduction (with full FinOps stack)
+
 ## Application Deployment
 
 In the `100_app` directory we have `main.tf` file which is responsible for deploying Google's Microservices Demo App.
