@@ -77,6 +77,20 @@ applicationSet:
     YAML
   ]
 }
+
+## This part violates the install in 02 and configure in 03, but it is necesaary here,
+# otherwise a restart on ebs pods deployment is required to use the right SA
+data "aws_caller_identity" "current" {}
+
+resource "kubernetes_service_account_v1" "cluster_autoscaler" {
+  metadata {
+    namespace = "kube-system"
+    name      = "cluster-autoscaler"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/cluster-autoscaler"
+    }
+  }
+}
 resource "helm_release" "cluster_autoscaler" {
   name             = "cluster-autoscaler"
   namespace        = "kube-system"
@@ -86,6 +100,8 @@ resource "helm_release" "cluster_autoscaler" {
   timeout          = 300
   atomic           = true
   create_namespace = false
+  force_update     = true
+  replace          = true  
 
   values = [
     <<YAML
@@ -94,10 +110,8 @@ autoDiscovery:
 awsRegion: eu-central-1
 rbac:
   create: true
-  serviceAccount:
-    name: cluster-autoscaler
 serviceAccount:
-  create: false  # Don't create, we'll manage it in step 3
+  create: false  
   name: cluster-autoscaler
 resources:
   requests:
@@ -108,10 +122,10 @@ resources:
     memory: 300Mi
     YAML
   ]
+  depends_on = [
+    kubernetes_service_account_v1.cluster_autoscaler
+  ]
 }
-## This part violates the install in 02 and configure in 03, but it is necesaary here,
-# otherwise a restart on ebs pods deployment is required to use the right SA
-data "aws_caller_identity" "current" {}
 resource "kubernetes_service_account_v1" "ebs_csi_controller" {
   metadata {
     namespace = "kube-system"
@@ -131,6 +145,15 @@ resource "helm_release" "ebs_csi_driver" {
   timeout          = 300
   atomic           = true
   create_namespace = false
+
+    values = [
+    <<YAML
+controller:
+  serviceAccount:
+    create: false
+    name: ebs-csi-controller-sa
+    YAML
+  ]
   
   depends_on = [
     kubernetes_service_account_v1.ebs_csi_controller  # Ensure SA is created first

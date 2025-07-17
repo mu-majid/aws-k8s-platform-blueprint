@@ -1,2 +1,8 @@
 .terraform
 .DS_Store
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+config.bat
+node_modules
