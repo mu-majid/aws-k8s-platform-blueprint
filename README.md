@@ -8,12 +8,12 @@ This repository contains a complete production-ready platform for deploying appl
 - [Prerequisites](#prerequisites)
 - [Architecture](#architecture)
   - [Layer Structure](#layer-structure)
-- [🏗️ Layer 1: Foundation](#️-layer-1-foundation)
+- [ Layer 1: Foundation](#️-layer-1-foundation)
   - [Components](#components)
   - [Deployment](#deployment)
   - [Understanding .terraform.lock.hcl](#understanding-terraformlockhcl)
   - [Post-Deployment](#post-deployment)
-- [🔧 Layer 2: Platform](#-layer-2-platform)
+- [ Layer 2: Platform](#-layer-2-platform)
   - [Secret Management Options](#secret-management-options)
   - [Step 02: Software Installation](#step-02-software-installation)
   - [Step 03: Software Configuration](#step-03-software-configuration)
@@ -21,7 +21,17 @@ This repository contains a complete production-ready platform for deploying appl
     - [Certificate Management](#2-certificate-management)
     - [Secret Management Configuration](#3-secret-management-configuration)
   - [Hosted Zones](#hosted-zones)
-- [📊 Layer 3: Observability and Monitoring](#-layer-3-observability-and-monitoring)
+- [ Layer 3: Observability and Monitoring](#-layer-3-observability-and-monitoring)
+  - [Components](#components-1)
+  - [Data Flow](#-observability-data-flow)
+  - [Overview](#overview-1)
+  - [Details](#details)
+- [ Layer 4: Resilience and Backup](#-layer-4-resilience)
+  - [Components](#components-1)
+  - [Backup Strategy](#-backup-strategy)
+  - [What Gets Protected](#what-gets-protected)
+  - [Details](#details)
+- [Layer 5: Cost Optimization - FinOps](#-layer-6-finops-cost-optimization)
   - [Components](#components-1)
   - [Data Flow](#-observability-data-flow)
   - [Overview](#overview-1)
@@ -351,7 +361,7 @@ Tempo + OpenTelemetry: Distributed tracing (needs SDK integration)
 
 Please head to the RAEDME file inside the `04_observability` folder for a more in depth insights about the tools and the over all architecture.
 
-## 🛡️ Layer 4: Resilience
+## Layer 4: Resilience
 
 Provides automated backup and disaster recovery capabilities for the entire Kubernetes platform using Velero. I will enclose all config and resource creation for this layer here, because backup is a complete product, and in the future we can decide moving to a different technology (Longhorn, Kasten...etc), so we would have the entire solution in one place.
 
