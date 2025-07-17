@@ -28,6 +28,10 @@ resource "kubernetes_annotations" "gp2_remove_default" {
   annotations = {
     "storageclass.kubernetes.io/is-default-class" = "false"
   }
+  force = true
+  depends_on = [
+    kubernetes_storage_class_v1.gp2_csi
+  ]
 }
 
 

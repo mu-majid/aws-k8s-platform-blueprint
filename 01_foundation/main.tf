@@ -5,10 +5,11 @@ locals {
     "author"                 = "majid"
   }
 }
+
 variable "domain" {
   description = "AWS Route53 hosted zone domain name"
   type        = string
-  default = "terraform-aws-platform.xyz"
+  default     = "terraform-aws-platform.xyz"
 }
 
 data "aws_route53_zone" "default" {
@@ -37,7 +38,7 @@ module "cluster" {
   version = "19.20"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.27"
+  cluster_version = "1.28"
 
   cluster_endpoint_public_access = true # important during dev - maybe make it private later
   # or as a middle ground:
@@ -147,4 +148,15 @@ module "ebs_csi_irsa_role" {
   }
 
   tags = local.tags
+}
+
+# Outputs
+output "cluster_name" {
+  description = "EKS cluster name"
+  value       = local.cluster_name
+}
+
+output "domain" {
+  description = "Domain name"
+  value       = var.domain
 }
