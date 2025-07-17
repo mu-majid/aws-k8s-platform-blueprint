@@ -90,6 +90,11 @@ Before getting started, ensure you have:
 
 1. **Terraform CLI** - [Installation Guide](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 2. **AWS CLI** - Properly configured with credentials
+3. Set these env in your .zshrc or.bashrc file:
+  ```bash
+  export TF_VAR_email="youremail@domain.com"
+  export TF_VAR_pixie_deploy_key="PIKIE_DEPLOY_KEY" # you create and get that from the Pixit UI
+  ```
 
 ## Architecture
 
@@ -397,6 +402,10 @@ terraform apply
 ### Usage Examples
 
 ```bash
+# Check Velero namespace and pods
+kubectl get namespace velero
+kubectl get pods -n velero
+
 # List available backups
 velero backup get
 
