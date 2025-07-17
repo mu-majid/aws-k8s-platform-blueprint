@@ -15,16 +15,22 @@ locals {
   }
 }
 
+# Data sources
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+
+# Get observability namespace (for Falco integration)
 data "kubernetes_namespace_v1" "observability" {
   metadata {
     name = "observability"
   }
 }
+
+# Get existing Route53 zone and ingress service
 data "aws_route53_zone" "default" {
   name = "terraform-aws-platform.xyz"
 }
+
 data "kubernetes_service_v1" "ingress_service" {
   metadata {
     name      = "ingress-nginx-controller"
@@ -43,17 +49,17 @@ resource "helm_release" "kyverno" {
   repository       = "https://kyverno.github.io/kyverno"
   chart            = "kyverno"
   version          = "3.1.4"
-  timeout          = 600
+  timeout          = 900  # Increase to 15 minutes for eBPF driver compilation
   atomic           = true
   create_namespace = true
 
   values = [
     <<YAML
-# Kyverno configuration
-replicaCount: 2
+# Kyverno configuration - use 1 replica for simplicity (can scale to 3+ later)
+replicaCount: 1
 
 admissionController:
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       cpu: 100m
@@ -104,92 +110,98 @@ serviceMonitor:
   ]
 }
 
-# Basic Security Policies
-resource "kubernetes_manifest" "disallow_privileged_containers" {
-  manifest = yamldecode(<<YAML
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
-metadata:
-  name: disallow-privileged-containers
-  annotations:
-    policies.kyverno.io/title: Disallow Privileged Containers
-    policies.kyverno.io/category: Pod Security Standards (Baseline)
-    policies.kyverno.io/severity: medium
-    policies.kyverno.io/description: >-
-      Privileged containers share namespaces with the host system and do not offer any security isolation.
-spec:
-  validationFailureAction: enforce
-  background: true
-  rules:
-    - name: check-privileged
-      match:
-        any:
-        - resources:
-            kinds:
-            - Pod
-      validate:
-        message: "Privileged containers are not allowed"
-        pattern:
-          spec:
-            =(securityContext):
-              =(privileged): "false"
-            containers:
-            - name: "*"
-              =(securityContext):
-                =(privileged): "false"
-  YAML
-  )
-
-  depends_on = [helm_release.kyverno]
+# Wait for Kyverno CRDs to be ready
+resource "time_sleep" "wait_for_kyverno_crds" {
+  depends_on = [time_sleep.wait_for_kyverno_crds]
+  create_duration = "60s"
 }
 
-resource "kubernetes_manifest" "require_resource_limits" {
-  manifest = yamldecode(<<YAML
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
-metadata:
-  name: require-pod-resources
-  annotations:
-    policies.kyverno.io/title: Require Pod Resources
-    policies.kyverno.io/category: Best Practices
-    policies.kyverno.io/severity: medium
-    policies.kyverno.io/description: >-
-      Resource limits and requests should be set for every container to ensure efficient resource usage.
-spec:
-  validationFailureAction: enforce
-  background: true
-  rules:
-    - name: validate-resources
-      match:
-        any:
-        - resources:
-            kinds:
-            - Pod
-      exclude:
-        any:
-        - resources:
-            namespaces:
-            - kube-system
-            - kube-public
-            - kyverno
-      validate:
-        message: "Resource requests and limits are required"
-        pattern:
-          spec:
-            containers:
-            - name: "*"
-              resources:
-                requests:
-                  memory: "?*"
-                  cpu: "?*"
-                limits:
-                  memory: "?*"
-                  cpu: "?*"
-  YAML
-  )
+# Basic Security Policies - Un comment and run apply again, not optimal but will think of a better solution
+# resource "kubernetes_manifest" "disallow_privileged_containers" {
+#   manifest = yamldecode(<<YAML
+# apiVersion: kyverno.io/v1
+# kind: ClusterPolicy
+# metadata:
+#   name: disallow-privileged-containers
+#   annotations:
+#     policies.kyverno.io/title: Disallow Privileged Containers
+#     policies.kyverno.io/category: Pod Security Standards (Baseline)
+#     policies.kyverno.io/severity: medium
+#     policies.kyverno.io/description: >-
+#       Privileged containers share namespaces with the host system and do not offer any security isolation.
+# spec:
+#   validationFailureAction: enforce
+#   background: true
+#   rules:
+#     - name: check-privileged
+#       match:
+#         any:
+#         - resources:
+#             kinds:
+#             - Pod
+#       validate:
+#         message: "Privileged containers are not allowed"
+#         pattern:
+#           spec:
+#             =(securityContext):
+#               =(privileged): "false"
+#             containers:
+#             - name: "*"
+#               =(securityContext):
+#                 =(privileged): "false"
+#   YAML
+#   )
 
-  depends_on = [helm_release.kyverno]
-}
+#   depends_on = [time_sleep.wait_for_kyverno_crds]
+# }
+
+# resource "kubernetes_manifest" "require_resource_limits" {
+#   manifest = yamldecode(<<YAML
+# apiVersion: kyverno.io/v1
+# kind: ClusterPolicy
+# metadata:
+#   name: require-pod-resources
+#   annotations:
+#     policies.kyverno.io/title: Require Pod Resources
+#     policies.kyverno.io/category: Best Practices
+#     policies.kyverno.io/severity: medium
+#     policies.kyverno.io/description: >-
+#       Resource limits and requests should be set for every container to ensure efficient resource usage.
+# spec:
+#   validationFailureAction: enforce
+#   background: true
+#   rules:
+#     - name: validate-resources
+#       match:
+#         any:
+#         - resources:
+#             kinds:
+#             - Pod
+#       exclude:
+#         any:
+#         - resources:
+#             namespaces:
+#             - kube-system
+#             - kube-public
+#             - kyverno
+#       validate:
+#         message: "Resource requests and limits are required"
+#         pattern:
+#           spec:
+#             containers:
+#             - name: "*"
+#               resources:
+#                 requests:
+#                   memory: "?*"
+#                   cpu: "?*"
+#                 limits:
+#                   memory: "?*"
+#                   cpu: "?*"
+#   YAML
+#   )
+
+#   depends_on = [helm_release.kyverno]
+# }
 
 # ================================
 # 2. IMAGE SECURITY (TRIVY)
@@ -285,11 +297,11 @@ resource "helm_release" "falco" {
 
   values = [
     <<YAML
-# Falco configuration
+# Falco configuration - simplified for reliability
 falco:
-  # Load kernel module or eBPF probe
+  # Driver configuration with fallback
   driver:
-    kind: ebpf
+    kind: auto  # should use modern eBPF driver (more reliable)
   
   # Resource configuration
   resources:
@@ -300,23 +312,15 @@ falco:
       cpu: 500m
       memory: 512Mi
 
-  # Rules configuration
+  # Basic rules only for initial deployment
   rules_file:
     - /etc/falco/falco_rules.yaml
-    - /etc/falco/k8s_audit_rules.yaml
-    - /etc/falco/rules.d
 
-  # Output configuration
+  # Simplified output
   json_output: true
-  json_include_output_property: true
-  json_include_tags_property: true
-
-  # Syscall event drop handling
+  
+  # Reduced syscall event handling for stability
   syscall_event_drops:
-    actions:
-      - log
-      - alert
-    rate: 0.03333
     max_burst: 1000
 
 # Service Monitor for Prometheus integration
@@ -325,7 +329,7 @@ serviceMonitor:
   additionalLabels:
     release: kube-prometheus-stack
 
-# HTTP output for webhook integration
+# Simplified sidekick configuration
 falcosidekick:
   enabled: true
   replicaCount: 1
@@ -338,13 +342,10 @@ falcosidekick:
       cpu: 200m
       memory: 256Mi
   
-  # Integration with Grafana/Prometheus
+  # Basic webhook integration only
   config:
-    prometheus:
-      extralabels: "rule"
-    grafana:
-      hostport: "http://kube-prometheus-stack-grafana.observability:80"
-      dashboardid: "11914"
+    webhook:
+      address: ""
     YAML
   ]
 }
