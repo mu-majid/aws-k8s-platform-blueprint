@@ -9,10 +9,14 @@ locals {
   cluster_name = "cluster-prod"
   backup_bucket_name = "${local.cluster_name}-velero-backups-${random_string.bucket_suffix.result}"
   tags = {
-    "karpenter.sh/discovery" = local.cluster_name
     "author"                 = "majid"
     "layer"                  = "resilience"
   }
+  oidc_provider_arn = replace(
+    data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer,
+    "https://",
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/"
+  )
 }
 
 # Random suffix for S3 bucket to ensure global uniqueness
@@ -55,6 +59,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "velero_backup" {
   rule {
     id     = "backup_lifecycle"
     status = "Enabled"
+    filter {}  # ← Add this empty filter
 
     # Move to IA after 30 days
     transition {
@@ -150,12 +155,11 @@ module "velero_irsa_role" {
 
   oidc_providers = {
     ex = {
-      provider_arn               = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+      provider_arn               = local.oidc_provider_arn
       namespace_service_accounts = ["velero:velero"]
     }
   }
 
-  tags = local.tags
 }
 
 # Attach the policy to the role
@@ -203,6 +207,7 @@ resource "helm_release" "velero" {
 
   values = [
     <<YAML
+upgradeCRDs: false
 # Velero configuration
 configuration:
   backupStorageLocation:
@@ -265,95 +270,42 @@ nodeAgent:
     limits:
       cpu: 500m
       memory: 512Mi
+# Needed for the schedules to be created by Helm, otherwise, timing issues with CRD creation
+schedules:
+  daily-backup:
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    template:
+      ttl: 720h  # 30 days retention
+      includedNamespaces: ["*"]
+      excludedNamespaces: ["kube-system", "kube-public", "kube-node-lease", "velero"]
+      storageLocation: aws-s3
+      volumeSnapshotLocations: ["aws-ebs"]
+      defaultVolumesToFsBackup: false  # Use EBS snapshots
+      
+  weekly-full-backup:
+    schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+    template:
+      ttl: 2160h  # 90 days retention
+      includedNamespaces: ["*"]
+      storageLocation: aws-s3
+      volumeSnapshotLocations: ["aws-ebs"]
+      defaultVolumesToFsBackup: true  # File-level backup for full backup
+      
+  monthly-dr-backup:
+    schedule: "0 4 1 * *"  # Monthly on 1st at 4 AM
+    template:
+      ttl: 8760h  # 365 days retention
+      includedNamespaces: ["*"]
+      storageLocation: aws-s3
+      volumeSnapshotLocations: ["aws-ebs"]
+      defaultVolumesToFsBackup: true
+      includeClusterResources: true
     YAML
   ]
 
   depends_on = [
     kubernetes_service_account_v1.velero,
     aws_s3_bucket.velero_backup
-  ]
-}
-
-# Backup schedules
-resource "kubernetes_manifest" "daily_backup" {
-  manifest = yamldecode(<<YAML
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: daily-backup
-  namespace: velero
-spec:
-  schedule: "0 2 * * *"  # Daily at 2 AM
-  template:
-    ttl: 720h  # 30 days retention
-    includedNamespaces:
-    - "*"
-    excludedNamespaces:
-    - kube-system
-    - kube-public
-    - kube-node-lease
-    - velero
-    storageLocation: aws-s3
-    volumeSnapshotLocations:
-    - aws-ebs
-    defaultVolumesToFsBackup: false  # Use EBS snapshots by default
-  YAML
-  )
-
-  depends_on = [
-    helm_release.velero
-  ]
-}
-
-resource "kubernetes_manifest" "weekly_full_backup" {
-  manifest = yamldecode(<<YAML
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: weekly-full-backup
-  namespace: velero
-spec:
-  schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
-  template:
-    ttl: 2160h  # 90 days retention
-    includedNamespaces:
-    - "*"
-    storageLocation: aws-s3
-    volumeSnapshotLocations:
-    - aws-ebs
-    defaultVolumesToFsBackup: true  # File-level backup for full backup
-  YAML
-  )
-
-  depends_on = [
-    helm_release.velero
-  ]
-}
-
-# Disaster recovery backup (monthly)
-resource "kubernetes_manifest" "monthly_dr_backup" {
-  manifest = yamldecode(<<YAML
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: monthly-dr-backup
-  namespace: velero
-spec:
-  schedule: "0 4 1 * *"  # Monthly on 1st at 4 AM
-  template:
-    ttl: 8760h  # 365 days retention
-    includedNamespaces:
-    - "*"
-    storageLocation: aws-s3
-    volumeSnapshotLocations:
-    - aws-ebs
-    defaultVolumesToFsBackup: true
-    includeClusterResources: true
-  YAML
-  )
-
-  depends_on = [
-    helm_release.velero
   ]
 }
 
@@ -375,4 +327,8 @@ output "backup_schedules" {
     weekly  = "Weekly on Sunday at 3 AM (90 days retention)"
     monthly = "Monthly on 1st at 4 AM (365 days retention)"
   }
+}
+
+output "debug_tags" {
+  value = local.tags
 }

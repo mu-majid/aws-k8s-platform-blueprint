@@ -19,27 +19,19 @@ terraform {
       version = "~> 3.5"
     }
   }
+    backend "s3" {
+    bucket = "terraform-k8s-platform-app"
+    key    = "aws/resilience"
+    region = "eu-central-1"
+  }
 }
 
 # AWS Provider
 provider "aws" {
   region = "eu-central-1"
-
-  default_tags {
-    tags = {
-      Environment = "production"
-      Project     = "terraform-aws-platform"
-      Layer       = "resilience"
-      ManagedBy   = "terraform"
-    }
-  }
 }
 
 # Get cluster info for Kubernetes provider
-data "aws_eks_cluster" "cluster" {
-  name = "cluster-prod"
-}
-
 data "aws_eks_cluster_auth" "cluster" {
   name = "cluster-prod"
 }
