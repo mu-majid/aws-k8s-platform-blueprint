@@ -515,6 +515,87 @@ terraform apply
 - **Short-term**: 10-30% waste identification
 - **Long-term**: 20-50% cost reduction (with full FinOps stack)
 
+## Layer 7: Security - Platform Protection
+
+### Purpose
+Comprehensive security layer providing policy enforcement, vulnerability scanning, cloud security assessment, and runtime threat detection.
+
+### Components
+
+#### Deployed
+- **Kyverno** - Configuration security and policy enforcement
+- **Trivy Operator** - Image vulnerability scanning and CIS compliance
+- **Falco** - Runtime security monitoring and threat detection  
+- **Prowler** - AWS security posture assessment (weekly scans)
+- **Security Dashboard** - Unified monitoring in Grafana
+
+#### Key Features
+- **Policy enforcement** for container security standards
+- **Continuous vulnerability scanning** of all images
+- **Real-time threat detection** with behavioral monitoring
+- **Cloud compliance** checking against CIS benchmarks
+- **Integrated alerting** through existing observability stack
+
+### What's Included
+
+```
+├── Kyverno Policy Engine (2 replicas)
+├── Trivy Operator (image + config scanning)
+├── Falco Runtime Security (eBPF-based)
+├── Prowler CronJob (weekly AWS assessment)  
+├── Security Grafana Dashboard
+└── S3 bucket for security reports
+```
+
+### Deployment
+
+```bash
+# Navigate to security layer
+cd layers/07_security/
+
+# Deploy security stack
+terraform init
+terraform plan
+terraform apply
+```
+
+### Access Points
+
+- **Security Dashboard**: `https://grafana.terraform-aws-platform.xyz` (Security Overview)
+- **Policy Reports**: `kubectl get clusterpolicies`
+- **Vulnerability Reports**: `kubectl get vulnerabilityreports -A`
+- **Runtime Alerts**: `kubectl logs -n falco-system -l app.kubernetes.io/name=falco`
+- **Cloud Reports**: S3 bucket with weekly Prowler assessments
+
+### Key Features
+
+- **Zero-trust policies** - No privileged containers, resource limits enforced
+- **Continuous scanning** - All images automatically scanned for vulnerabilities
+- **Behavioral monitoring** - Real-time detection of suspicious runtime activity
+- **Compliance automation** - Weekly AWS security posture assessment
+- **Unified visibility** - All security metrics in existing Grafana dashboards
+
+### Quick Tips
+
+- **Monitor policy violations** in Grafana security dashboard
+- **Review vulnerability reports** weekly for critical CVEs
+- **Check Falco alerts** for runtime security incidents
+- **Access Prowler reports** in S3 for compliance evidence
+- **Use Kyverno policies** to prevent misconfigurations before deployment
+
+### Next Steps
+
+1. Monitor security dashboard for baseline establishment
+2. Tune Falco rules based on environment-specific patterns
+3. Create additional Kyverno policies for organization requirements
+4. Set up automated remediation workflows for critical vulnerabilities
+
+### Expected Impact
+
+- **Immediate**: Policy enforcement prevents misconfigurations
+- **Short-term**: Vulnerability visibility and runtime threat detection  
+- **Long-term**: Compliance-ready platform with defense-in-depth security
+
 ## Application Deployment
 
 In the `100_app` directory we have `main.tf` file which is responsible for deploying Google's Microservices Demo App.
