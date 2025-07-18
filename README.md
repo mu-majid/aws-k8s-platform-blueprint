@@ -2,56 +2,66 @@
 
 This repository contains a complete production-ready platform for deploying applications on AWS using Kubernetes, built with Terraform and following GitOps principles.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Architecture](#architecture)
   - [Layer Structure](#layer-structure)
-- [ Layer 1: Foundation](#️-layer-1-foundation)
+- [Layer 1: Foundation](#layer-1-foundation)
   - [Components](#components)
   - [Deployment](#deployment)
   - [Understanding .terraform.lock.hcl](#understanding-terraformlockhcl)
   - [Post-Deployment](#post-deployment)
-- [ Layer 2: Platform](#-layer-2-platform)
+- [Layer 2: Platform](#layer-2-platform)
   - [Secret Management Options](#secret-management-options)
   - [Step 02: Software Installation](#step-02-software-installation)
   - [Step 03: Software Configuration](#step-03-software-configuration)
-    - [DNS Configuration](#1-dns-configuration)
-    - [Certificate Management](#2-certificate-management)
-    - [Secret Management Configuration](#3-secret-management-configuration)
+    - [1. DNS Configuration](#1-dns-configuration)
+    - [2. Certificate Management](#2-certificate-management)
+    - [3. Secret Management Configuration](#3-secret-management-configuration)
   - [Hosted Zones](#hosted-zones)
-- [ Layer 3: Observability and Monitoring](#-layer-3-observability-and-monitoring)
+- [Layer 3: Observability and Monitoring](#layer-3-observability-and-monitoring)
   - [Components](#components-1)
-  - [Data Flow](#-observability-data-flow)
+  - [Observability Data Flow](#observability-data-flow)
   - [Overview](#overview-1)
   - [Details](#details)
-- [ Layer 4: Resilience and Backup](#-layer-4-resilience)
-  - [Components](#components-1)
-  - [Backup Strategy](#-backup-strategy)
-  - [What Gets Protected](#what-gets-protected)
-  - [Details](#details)
-- [Layer 5: Cost Optimization - FinOps](#-layer-6-finops-cost-optimization)
-  - [Components](#components-1)
-  - [Data Flow](#-observability-data-flow)
-  - [Overview](#overview-1)
-  - [Details](#details)
-- [🚀 Application Deployment](#-application-deployment)
+- [Layer 4: Resilience and Backup](#layer-4-resilience)
   - [Components](#components-2)
-    - [Creates Namespace](#1-creates-namespace)
-    - [ArgoCD Application](#2-argocd-application)
-    - [Ingress with TLS](#3-ingress-with-tls)
-    - [External Secret](#4-external-secret)
+  - [Backup Strategy](#backup-strategy)
+  - [What Gets Protected](#what-gets-protected)
+  - [Details](#details-1)
+- [Layer 5: Cost Optimization - FinOps](#layer-5-cost-optimization---finops)
+  - [Components](#components-3)
+  - [Data Flow](#data-flow)
+  - [Overview](#overview-2)
+  - [Details](#details-2)
+- [Layer 6: Security - Platform Protection](#layer-6-security---platform-protection)
+  - [Components](#components-4)
+  - [Key Features](#key-features)
+  - [What's Included](#whats-included)
+  - [Deployment](#deployment-1)
+  - [Access Points](#access-points)
+  - [Quick Tips](#quick-tips)
+  - [Next Steps](#next-steps)
+  - [Expected Impact](#expected-impact)
+- [Layer 7: Application Deployment](#application-deployment)
+  - [Components](#components-5)
+    - [1. Creates Namespace](#1-creates-namespace)
+    - [2. ArgoCD Application](#2-argocd-application)
+    - [3. Ingress with TLS](#3-ingress-with-tls)
+    - [4. External Secret](#4-external-secret)
   - [End Result](#end-result)
   - [How It Works](#how-it-works)
-  - [Deployment](#deployment-1)
-- [🌐 Traffic Flow](#-traffic-flow)
-- [🔧 Troubleshooting](#-troubleshooting)
+  - [Deployment](#deployment-2)
+- [Traffic Flow](#traffic-flow)
+- [Troubleshooting](#troubleshooting)
   - [Common Issues](#common-issues)
   - [Useful Commands](#useful-commands)
-- [✨ Best Practices Implemented](#-best-practices-implemented)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+- [Cost Analysis](#platform-cost-analysis)
+- [✨ Best Practices Implemented](#best-practices-implemented)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -298,7 +308,7 @@ This part installs and configures many tools to help us monitor and check our cl
 4. Auto-instrumented Tracing (Pixie)
 5. Tracing (Grafana Tempo & Open Telemetry)
 
-### 🔄 Observability Data Flow:
+### Observability Data Flow:
 
 ```mermaid
 graph TD
@@ -541,7 +551,7 @@ Comprehensive security layer providing policy enforcement, vulnerability scannin
 ```
 ├── Kyverno Policy Engine (2 replicas)
 ├── Trivy Operator (image + config scanning)
-├── Falco Runtime Security (eBPF-based)
+├── Falco Runtime Security (eBPF-based) - DISABLED FOR NOW
 ├── Prowler CronJob (weekly AWS assessment)  
 ├── Security Grafana Dashboard
 └── S3 bucket for security reports
@@ -759,6 +769,51 @@ kubectl get certificates -A
 # Check ArgoCD applications
 kubectl -n argocd get applications
 ```
+
+## Platform Cost Analysis
+
+### Monthly Cost Breakdown by Layer
+
+| Layer | Primary Cost Drivers | Estimated Monthly Cost |
+|-------|---------------------|----------------------|
+| **Foundation** | EKS control plane ($72), Worker nodes (~$400), NAT Gateways ($135) | **~$650** |
+| **Core Platform** | Network Load Balancer ($16), EBS storage ($50) | **~$80** |
+| **Configuration** | DNS queries, certificates (minimal) | **~$5** |
+| **Observability** | EBS storage for Prometheus/Loki ($100), compute overhead ($100) | **~$200** |
+| **Resilience** | S3 backup storage ($15), EBS snapshots ($20) | **~$35** |
+| **FinOps** | OpenCost compute overhead (minimal) | **~$10** |
+| **Security** | Trivy/Kyverno overhead ($25), Prowler S3 ($5) | **~$30** |
+| **Total Platform Cost** | | **~$1,010/month** |
+
+*Note: Costs based on us-east-1 pricing with 3-4 t3.xlarge worker nodes and moderate storage usage*
+
+### Cost Optimization Strategies
+
+#### Immediate Savings (20-40% reduction)
+- **Use Spot Instances**: Replace on-demand worker nodes with spot instances for 60-90% compute savings
+- **Right-size Worker Nodes**: Start with t3.large instead of t3.xlarge, scale up as needed
+- **Single AZ for Development**: Use one NAT Gateway for dev environments (-$90/month)
+- **Reduce EBS Storage**: Use gp3 instead of gp2, implement storage lifecycle policies
+
+#### Medium-term Optimizations (Additional 10-20%)
+- **Implement Karpenter**: Replace cluster-autoscaler for better instance selection and spot integration
+- **Storage Optimization**: Compress Loki logs, reduce Prometheus retention period
+- **Resource Requests/Limits**: Properly size all workloads to improve node utilization
+- **Reserved Instances**: Commit to 1-year terms for predictable workloads
+
+#### Advanced Cost Controls
+- **Cluster Consolidation**: Run multiple environments on same cluster with namespace separation
+- **Managed Services**: Consider EKS Fargate for specific workloads to eliminate node management
+- **Backup Optimization**: Implement intelligent backup scheduling and retention policies
+- **Development Environment**: Use smaller instance types and reduced replica counts for non-prod
+
+#### Monitoring & Governance
+- **Set up Cost Alerts**: Configure AWS Budgets for proactive cost monitoring
+- **Regular Cost Reviews**: Weekly cost analysis using OpenCost dashboards
+- **Resource Tagging**: Implement comprehensive tagging for accurate cost allocation
+- **Automated Cleanup**: Schedule removal of unused resources and old backups
+
+**Potential Total Savings**: 30-60% reduction possible with aggressive optimization, bringing monthly costs down to **$400-700/month** while maintaining production capabilities.
 
 ## Best Practices Implemented
 
