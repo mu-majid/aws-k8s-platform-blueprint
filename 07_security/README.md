@@ -26,7 +26,7 @@ The Security layer provides comprehensive protection for your Kubernetes platfor
   - SBOM generation
 - **Storage**: Uses gp2-csi storage class for scan cache
 
-#### 3. **Falco - Runtime Monitoring**
+#### 3. **Falco - Runtime Monitoring** DISABLED FOR NOW
 - **Purpose**: Real-time threat detection and runtime security
 - **Features**:
   - Syscall monitoring via eBPF
