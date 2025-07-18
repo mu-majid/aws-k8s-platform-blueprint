@@ -2,9 +2,9 @@
 
 This layer deploys a comprehensive observability stack on your EKS cluster, providing metrics, logs, traces, and automatic application monitoring. The stack follows the **LGTM** (Loki, Grafana, Tempo, Mimir) + **Pixie** approach for complete observability coverage.
 
-## 🛠️ Tools Overview & Benefits
+## Tools Overview & Benefits
 
-### **1. Prometheus** 📊
+### **1. Prometheus** 
 **What it does:** Metrics collection and storage system with powerful querying language (PromQL)
 
 **Benefits:**
@@ -19,7 +19,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - Kubernetes API server metrics
 - Cluster health and capacity metrics
 
-### **2. Grafana** 📈
+### **2. Grafana** 
 **What it does:** Data visualization and dashboard platform
 
 **Benefits:**
@@ -33,7 +33,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - Node and pod resource utilization
 - Pre-configured data sources for Loki and Tempo
 
-### **3. Loki** 📝
+### **3. Loki** 
 **What it does:** Log aggregation system inspired by Prometheus
 
 **Benefits:**
@@ -47,7 +47,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - Automatic labeling with namespace, pod name, container name
 - Log retention and compression
 
-### **4. Promtail** 🚚
+### **4. Promtail** 
 **What it does:** Log collection agent that feeds Loki
 
 **Benefits:**
@@ -56,7 +56,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - **Efficient**: Low resource overhead, designed for Kubernetes
 - **Reliable**: Handles log rotation and pod restarts gracefully
 
-### **5. Tempo** 🔍
+### **5. Tempo** 
 **What it does:** Distributed tracing backend
 
 **Benefits:**
@@ -69,7 +69,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - Instrument your applications with OpenTelemetry SDKs
 - Configure trace exporters to send data to OpenTelemetry Collector
 
-### **6. OpenTelemetry Collector** 🔄
+### **6. OpenTelemetry Collector** 
 **What it does:** Vendor-agnostic data collection and processing pipeline
 
 **Benefits:**
@@ -78,7 +78,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - **Flexible Routing**: Send data to multiple backends
 - **Standards Based**: Implements OpenTelemetry specification
 
-### **7. Pixie** ✨ (The Game Changer)
+### **7. Pixie** (The Game Changer)
 **What it does:** Automatic application observability using eBPF
 
 **Benefits:**
@@ -95,7 +95,7 @@ This layer deploys a comprehensive observability stack on your EKS cluster, prov
 - Application profiling and flame graphs
 - DNS request monitoring
 
-## 🏗️ Overall Cluster Architecture
+## Overall Cluster Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -144,7 +144,7 @@ External Services:
 └── Pixie Cloud (Trace Correlation)
 ```
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before deploying the observability layer, ensure you have:
 
@@ -161,7 +161,7 @@ Before deploying the observability layer, ensure you have:
 4. Create a new deploy key and copy the value
 5. This key will be used in the terraform variable
 
-## 🚀 Deployment Instructions
+## Deployment Instructions
 
 ### Step 1: Configure Variables
 
@@ -232,7 +232,7 @@ Pixie automatically discovers and monitors:
 
 ## ⚠️ Important Notes & Gotchas
 
-### **🔐 Security Considerations**
+### **Security Considerations**
 
 1. **Change Default Passwords**
    ```bash
@@ -250,7 +250,7 @@ Pixie automatically discovers and monitors:
    - Consider implementing network policies to restrict traffic
    - Observability namespace should be isolated from application namespaces
 
-### **💾 Storage & Retention**
+### **Storage & Retention**
 
 1. **Persistent Volume Requirements**
    - Prometheus: 20GB (7-day retention)
@@ -266,7 +266,7 @@ Pixie automatically discovers and monitors:
        retention: 7d  # Increase for longer retention
    ```
 
-### **🚨 Resource Usage**
+### **Resource Usage**
 
 1. **Node Requirements**
    - Minimum 3 nodes recommended for HA
@@ -278,7 +278,7 @@ Pixie automatically discovers and monitors:
    - Prometheus: ~0.5-1 CPU core
    - Total stack: ~2-3 CPU cores cluster-wide
 
-### **🔧 Common Issues & Solutions**
+### **Common Issues & Solutions**
 
 #### **Issue: Pixie Pods Stuck in Pending**
 ```bash
@@ -309,7 +309,7 @@ kubectl logs deployment/cert-manager -n cert-manager
 kubectl describe certificate grafana-tls -n observability
 ```
 
-### **🔄 Scaling Considerations**
+### **Scaling Considerations**
 
 1. **High Availability**
    ```yaml
@@ -326,7 +326,7 @@ kubectl describe certificate grafana-tls -n observability
    - Implement log rotation policies
    - Consider using AWS EBS with auto-scaling
 
-### **📈 Performance Tuning**
+### **Performance Tuning**
 
 1. **Prometheus Optimization**
    ```yaml
@@ -346,7 +346,7 @@ kubectl describe certificate grafana-tls -n observability
        ingestion_burst_size_mb: 20
    ```
 
-## 🛠️ Maintenance Tasks
+## Maintenance Tasks
 
 ### **Daily**
 - Monitor cluster resource usage
@@ -363,7 +363,7 @@ kubectl describe certificate grafana-tls -n observability
 - Review and optimize retention policies
 - Backup Grafana dashboards and configurations
 
-## 📚 Useful Commands
+## Useful Commands
 
 ```bash
 # Check all observability pods
@@ -386,7 +386,7 @@ kubectl top nodes
 kubectl top pods -n observability
 ```
 
-## 🎯 Next Steps
+## Next Steps
 
 1. **Add Custom Dashboards**
    - Import community dashboards for your specific applications
@@ -404,7 +404,7 @@ kubectl top pods -n observability
    - Explore Pixie's PxL scripting language
    - Create custom monitoring scripts for your applications
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 If you encounter issues, check:
 
