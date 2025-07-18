@@ -30,7 +30,7 @@ The FinOps layer focuses on **cost optimization** and **efficient resource manag
 
 ## Enhancement Roadmap
 
-### 🔄 **KEDA - Event-driven Autoscaling** (Next Phase)
+### **KEDA - Event-driven Autoscaling** (Next Phase)
 
 #### What it adds:
 - **Smarter Scaling**: Scale pods based on events, not just CPU/memory
@@ -80,11 +80,11 @@ The FinOps layer focuses on **cost optimization** and **efficient resource manag
 | **Node Consolidation** | Manual | Automatic |
 
 #### Benefits:
-- **💰 Cost Savings**: 20-50% reduction in compute costs
-- **⚡ Performance**: Faster scaling, better resource utilization
-- **🎯 Smart Provisioning**: Chooses optimal instance types automatically
-- **🔄 Auto-optimization**: Continuously consolidates underutilized nodes
-- **📊 Spot Integration**: Seamless spot instance management
+- **Cost Savings**: 20-50% reduction in compute costs
+- **Performance**: Faster scaling, better resource utilization
+- **Smart Provisioning**: Chooses optimal instance types automatically
+- **Auto-optimization**: Continuously consolidates underutilized nodes
+- **Spot Integration**: Seamless spot instance management
 
 #### Migration Strategy:
 ```hcl
@@ -137,7 +137,7 @@ The FinOps layer focuses on **cost optimization** and **efficient resource manag
 
 ---
 
-## 📈 Expected ROI by Phase
+## Expected ROI by Phase
 
 ### **Phase 1 (Current)**
 - **Cost Visibility**: 100% cost transparency
@@ -156,7 +156,7 @@ The FinOps layer focuses on **cost optimization** and **efficient resource manag
 
 ---
 
-## 🔧 Tools Comparison
+## Tools Comparison
 
 | Tool | Primary Benefit | Implementation Effort | Impact |
 |------|----------------|---------------------|---------|
