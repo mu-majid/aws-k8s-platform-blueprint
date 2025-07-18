@@ -49,7 +49,7 @@ resource "helm_release" "kyverno" {
   repository       = "https://kyverno.github.io/kyverno"
   chart            = "kyverno"
   version          = "3.1.4"
-  timeout          = 900  # Increase to 15 minutes for eBPF driver compilation
+  timeout          = 600
   atomic           = true
   create_namespace = true
 
@@ -112,11 +112,11 @@ serviceMonitor:
 
 # Wait for Kyverno CRDs to be ready
 resource "time_sleep" "wait_for_kyverno_crds" {
-  depends_on = [time_sleep.wait_for_kyverno_crds]
+  depends_on = [helm_release.kyverno]
   create_duration = "60s"
 }
 
-# Basic Security Policies - Un comment and run apply again, not optimal but will think of a better solution
+# Basic Security Policies - un comment and run apply again to enforce policies - not optimal
 # resource "kubernetes_manifest" "disallow_privileged_containers" {
 #   manifest = yamldecode(<<YAML
 # apiVersion: kyverno.io/v1
@@ -139,6 +139,15 @@ resource "time_sleep" "wait_for_kyverno_crds" {
 #         - resources:
 #             kinds:
 #             - Pod
+#       exclude:
+#         any:
+#         - resources:
+#             namespaces:
+#             - kube-system
+#             - kube-public
+#             - kyverno
+#             - falco-system
+#             - trivy-system
 #       validate:
 #         message: "Privileged containers are not allowed"
 #         pattern:
@@ -184,6 +193,8 @@ resource "time_sleep" "wait_for_kyverno_crds" {
 #             - kube-system
 #             - kube-public
 #             - kyverno
+#             - falco-system
+#             - trivy-system
 #       validate:
 #         message: "Resource requests and limits are required"
 #         pattern:
@@ -200,7 +211,7 @@ resource "time_sleep" "wait_for_kyverno_crds" {
 #   YAML
 #   )
 
-#   depends_on = [helm_release.kyverno]
+#   depends_on = [time_sleep.wait_for_kyverno_crds]
 # }
 
 # ================================
@@ -281,74 +292,86 @@ compliance:
 }
 
 # ================================
-# 3. RUNTIME MONITORING (FALCO)
+# 3. RUNTIME MONITORING (FALCO) DIABLED FOR NOW
 # ================================
+# Falco for runtime security monitoring - simple & production-ready
+# resource "helm_release" "falco" {
+#   name             = "falco"
+#   namespace        = "falco-system"
+#   repository       = "https://falcosecurity.github.io/charts"
+#   chart            = "falco"
+#   version          = "4.7.0"  # Latest stable version
+#   timeout          = 600
+#   atomic           = true
+#   create_namespace = true
 
-# Falco for runtime security monitoring
-resource "helm_release" "falco" {
-  name             = "falco"
-  namespace        = "falco-system"
-  repository       = "https://falcosecurity.github.io/charts"
-  chart            = "falco"
-  version          = "4.2.4"
-  timeout          = 600
-  atomic           = true
-  create_namespace = true
+#   values = [
+#     <<YAML
+# # Simple production-ready Falco configuration using no-driver image
+# image:
+#   registry: docker.io
+#   repository: falcosecurity/falco-no-driver
+#   tag: "0.37.1"
 
-  values = [
-    <<YAML
-# Falco configuration - simplified for reliability
-falco:
-  # Driver configuration with fallback
-  driver:
-    kind: auto  # should use modern eBPF driver (more reliable)
+# # Enable syscall event source with eBPF
+# syscall_event_source:
+#   enabled: true
   
-  # Resource configuration
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+# # Driver configuration for no-driver image
+# driver:
+#   kind: ebpf  # Use eBPF probe included in no-driver image
 
-  # Basic rules only for initial deployment
-  rules_file:
-    - /etc/falco/falco_rules.yaml
-
-  # Simplified output
-  json_output: true
+# # Disable all driver loading and compilation
+# collectors:
+#   enabled: false
   
-  # Reduced syscall event handling for stability
-  syscall_event_drops:
-    max_burst: 1000
+# # Disable driver loader
+# driverLoader:
+#   enabled: false
 
-# Service Monitor for Prometheus integration
-serviceMonitor:
-  enabled: true
-  additionalLabels:
-    release: kube-prometheus-stack
+# # Disable init containers completely  
+# initContainer:
+#   enabled: false
 
-# Simplified sidekick configuration
-falcosidekick:
-  enabled: true
-  replicaCount: 1
+# # eBPF configuration
+# ebpf:
+#   enabled: true
+#   settings:
+#     hostNetwork: true
   
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-  
-  # Basic webhook integration only
-  config:
-    webhook:
-      address: ""
-    YAML
-  ]
-}
+# # Resource configuration for production
+# resources:
+#   requests:
+#     cpu: 100m
+#     memory: 512Mi
+#   limits:
+#     cpu: 1000m
+#     memory: 1Gi
+
+# # Essential security rules
+# rules_file:
+#   - /etc/falco/falco_rules.yaml
+
+# # Output configuration
+# json_output: true
+# log_level: info
+
+# # Performance settings
+# syscall_event_drops:
+#   max_burst: 1000
+
+# # Service monitor for Prometheus
+# serviceMonitor:
+#   enabled: true
+#   additionalLabels:
+#     release: kube-prometheus-stack
+
+# # Disable sidekick for simplicity (can enable later)
+# falcosidekick:
+#   enabled: false
+#     YAML
+#   ]
+# }
 
 # ================================
 # 4. CLOUD SECURITY POSTURE (PROWLER)
